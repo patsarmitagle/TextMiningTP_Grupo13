@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Text Mining</title>
+	<link rel="stylesheet" href="./css/bootstrap.min.css">
+	<link href="https://unpkg.com/tabulator-tables@5.2.7/dist/css/tabulator.min.css" rel="stylesheet">
+</head>
+<body>
+
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<h1 class="text-center">Text Mining</h1>
+			</div>
+		</div>
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<form class="form-control" action="procesar.php" method="post" enctype="multipart/form-data">
+					<div class="mb-3">
+						<label for="file" class="form-label">Ingrese un archivo csv</label>
+						<input type="file" name="csv_file" id="file" accept=".csv" class="form-control">
+					</div>
+					<div class="text-center">
+						<input type="submit" value="Transformar" class="btn btn-primary">
+					</div>
+					<div id="loading" class="spinner-border" role="status">
+						<span class="sr-only"></span>
+					</div>
+				</form>
+				
+			</div>
+		</div>
+		<div class="row justify-content-center">
+			<div class="col-md-8 text-center">
+				<button id="download-csv" class="btn btn-success">Download CSV</button>
+			</div>
+		</div>
+		<div class="row justify-content-center">
+			<div class="col-md-8">
+				<div id="response" class="mt-3"></div>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	<script src="./js/bootstrap.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	
+	
+	<script src="https://unpkg.com/tabulator-tables@5.2.7/dist/js/tabulator.min.js"></script>
+	<script>
+		$('#loading').hide();
+		$('#download-csv').hide();
+		function renderTable(data) {
+			var table = new Tabulator("#response", {
+				data: data,
+				pagination:true,
+    			paginationSize:20,
+				layout: "fitColumns",
+				columns: [
+					{ title: "Tracking ID", field: "IdTracking" },
+					{ title: "Descripción", field: "Descripcion", formatter:"textarea", width:200 },
+					{ title: "Hipótesis Facturable", field: "Facturable_Descripcion" },
+					{ title: "Facturable", field:"Facturable", formatter: "tickCross", editor: true }
+				]
+			});
+			document.getElementById("download-csv").addEventListener("click", function(){
+				table.download("csv", "data.csv");
+			});
+			$('#download-csv').show();
+		}
+
+		$(document).ready(function() {
+			$('form').on('submit', function(event) {
+				event.preventDefault();
+				$('#loading').show();
+				var formData = new FormData(this);
+				$.ajax({
+					url: 'procesar.php',
+					type: 'POST',
+					data: formData,
+					processData: false,
+					contentType: false,
+					success: function(response) {
+						$('#loading').hide();
+						console.log(response);
+						var data = JSON.parse(response);
+						renderTable(data);
+					},
+					error: function() {
+						$('#loading').hide();
+						alert('An error occurred while uploading the file');
+					}
+				});
+			});
+		});
+		
+	</script>
+</body>
+</html>
